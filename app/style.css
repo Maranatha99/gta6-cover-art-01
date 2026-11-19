@@ -31,6 +31,7 @@ h1 {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  filter: drop-shadow(0 0 14px rgba(255, 41, 117, 0.45));
 }
 h2 {
   font-size: 13px;
@@ -53,9 +54,10 @@ header p { margin: 8px 0 0; color: #b9aecb; }
 .controls { display: flex; flex-direction: column; gap: 18px; width: 330px; flex-shrink: 0; }
 .group {
   background: #1d0f31;
-  border: 1px solid #3a2360;
+  border: 1px solid #4a2d78;
   border-radius: 12px;
   padding: 14px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
 }
 .hint { margin: 8px 0 0; font-size: 12.5px; color: #9d8fb5; }
 
@@ -80,8 +82,8 @@ button {
   color: #f3eefc;
   cursor: pointer;
 }
-button:hover { border-color: #8c1eff; }
-button.active { background: #ff2975; border-color: #ff2975; color: #fff; }
+button:hover { border-color: #8c1eff; box-shadow: 0 0 12px rgba(140, 30, 255, 0.45); }
+button.active { background: #ff2975; border-color: #ff2975; color: #fff; box-shadow: 0 0 14px rgba(255, 41, 117, 0.55); }
 button.primary { background: linear-gradient(90deg, #ff2975, #8c1eff); border: 0; }
 button.ghost { background: transparent; }
 #status { margin: 10px 0 0; min-height: 1.2em; font-size: 13px; color: #7ee8fa; }
@@ -124,7 +126,7 @@ button.ghost { background: transparent; }
   max-width: 640px;
   aspect-ratio: 1 / 1;
   height: auto;
-  box-shadow: 0 12px 44px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 12px 44px rgba(0, 0, 0, 0.55), 0 0 0 2px rgba(255, 41, 117, 0.45), 0 0 36px rgba(140, 30, 255, 0.35);
   border-radius: 4px;
   cursor: grab;
   touch-action: none;

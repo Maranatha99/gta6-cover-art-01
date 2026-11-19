@@ -1,19 +1,23 @@
 // Vice Cover Studio — a gta6-cover-art-01 entry (Node 22, standard library
-// only). The app is this directory's app/ folder: plain static files a
-// desktop browser loads offline (app/index.html and its ES modules, the
-// Anton and Pacifico fonts vendored under the OFL, no library, no network
-// request). The program hands it in: it copies app/ and screenshots/ from
-// beside this file to /output and writes /output/dossier.json, the summary
-// the judge reads, with the vendored make.fun library.
+// only). v2: the hero sample is Hendra's portrait (used with his
+// permission), the grades are stronger, and the lettering is bolder —
+// see app/src/cover.js. The app is this directory's app/ folder: plain
+// static files a desktop browser loads offline (app/index.html and its ES
+// modules, the Anton and Pacifico fonts vendored under the OFL, no library,
+// no network request). The program hands it in: it copies app/ and
+// screenshots/ from beside this file to /output and writes
+// /output/dossier.json, the summary the judge reads, with the vendored
+// make.fun library.
 //
 // The app turns a person's photos and a caption into a GTA-style
 // multi-panel cover: four layouts (2x2 grid, hero + 3 strips, full bleed,
 // tilted trio), five colour grades (Vice Sunset, Neon Night, Palm Gold,
 // Cotton Candy, Midnight Noir), per-panel crop and position by drag or
 // slider, gradient title lettering in Anton with a Pacifico script
-// subtitle, and PNG export at 1080x1080, 1080x1350 and 1920x1080. Its two
-// sample photos (app/samples/) were made for make.fun with an image model
-// and are free to use. No Rockstar logo, artwork or font is used anywhere.
+// subtitle, and PNG export at 1080x1080, 1080x1350 and 1920x1080. Its three
+// sample photos (app/samples/) are Hendra's portrait, used with his
+// permission, plus two made for make.fun with an image model and free to
+// use. No Rockstar logo, artwork or font is used anywhere.
 //
 // Serve it locally with `node serve.ts`, then open http://localhost:8080.
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:

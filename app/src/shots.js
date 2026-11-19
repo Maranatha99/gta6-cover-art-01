@@ -1,29 +1,56 @@
 // Fixed scenes for screenshots, driven by the query string:
 //
-//   ?shot=cover&photo=pier&layout=hero&grade=sunset&title=SUNSET%20HEIST
-//     &subtitle=Neon%20Shore%20Nights&size=1920x1080
+//   ?shot=cover&photo=hendra&layout=hero&grade=sunset&title=HENDRA
+//     &subtitle=Vice%20City%20Nights&size=1920x1080
+//     &p0=hendra&p1=pier&p2=boulevard&p3=hendra
+//     &z0=1.5&x0=0.21&y0=0.5&z1=1&x1=0&y1=-0.1
 //       The cover alone, filling the viewport — the canvas is sized to the
 //       requested export size and CSS-scaled to fit the window, so a
 //       screenshot at the matching window size shows the cover exactly.
-//   ?shot=editor&photo=boulevard&title=BOULEVARD%20QUEEN
+//       p0..p3 name the photo per panel slot (default: every slot uses
+//       `photo`); z0..z3, x0..x3, y0..y3 are that slot's zoom and pan.
+//   ?shot=editor&photo=hendra&title=HENDRA
 //       The full editor with a sample photo loaded.
 //
 // `window.__shotReady` is set once the fonts are in and the scene has
 // painted twice, so a headless screenshot waits for the real render.
 import { GRADES, LAYOUTS } from './cover.js';
 
+// The v1 single-photo crops, kept as the fallback when a shot names no
+// per-slot crop: each slot gets a different crop of the one photo, so a
+// multi-panel layout reads as a poster instead of the same frame repeated.
+const FALLBACK_CROPS = [
+  { zoom: 1, ox: 0, oy: 0 },
+  { zoom: 1.4, ox: 0, oy: 0.18 },
+  { zoom: 1.3, ox: 0.1, oy: -0.12 },
+  { zoom: 1.8, ox: -0.1, oy: 0 },
+];
+
 export async function runShot(shot, query, setup) {
-  const photo = query.get('photo') ?? 'pier';
-  const title = query.get('title') ?? 'Sunset Heist';
-  const subtitle = query.get('subtitle') ?? 'Neon Shore Nights';
+  const photo = query.get('photo') ?? 'hendra';
+  const title = query.get('title') ?? 'Hendra';
+  const subtitle = query.get('subtitle') ?? 'Vice City Nights';
   const layout = LAYOUTS[query.get('layout')] ? query.get('layout') : 'hero';
   const grade = GRADES[query.get('grade')] ? query.get('grade') : 'sunset';
   const size = (query.get('size') ?? '').split('x');
   const sizeW = Number(size[0]) || 0;
   const sizeH = Number(size[1]) || 0;
+  // Per-slot photos and crops: p0..p3, z0..z3, x0..x3, y0..y3.
+  const slots = [0, 1, 2, 3].map((i) => {
+    const crop = FALLBACK_CROPS[i % FALLBACK_CROPS.length];
+    const zoom = Number(query.get(`z${i}`));
+    const ox = Number(query.get(`x${i}`));
+    const oy = Number(query.get(`y${i}`));
+    return {
+      photo: query.get(`p${i}`) ?? photo,
+      zoom: Number.isFinite(zoom) ? zoom : crop.zoom,
+      ox: Number.isFinite(ox) ? ox : crop.ox,
+      oy: Number.isFinite(oy) ? oy : crop.oy,
+    };
+  });
 
   if (shot === 'cover') document.body.classList.add('shot-cover');
-  await setup({ photo, title, subtitle, layout, grade, sizeW, sizeH });
+  await setup({ photo, title, subtitle, layout, grade, sizeW, sizeH, slots });
 
   // Wait for the vendored fonts: the title must render in Anton/Pacifico,
   // not in a fallback, before the screenshot is taken.

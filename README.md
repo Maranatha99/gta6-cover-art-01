@@ -12,7 +12,7 @@ watermark: photos never leave the browser.
 ## What it does
 
 - **Any photo, any panel** — load photos from your machine (file picker or
-  drag-and-drop) or use the two bundled samples. Each panel takes its own
+  drag-and-drop) or use the three bundled samples. Each panel takes its own
   photo, cropped and positioned by dragging on the preview or with the
   zoom/pan sliders.
 - **Four layouts** — Grid 2×2, Hero + 3 strips, Full bleed, and a Tilted
@@ -41,9 +41,10 @@ Then open http://localhost:8080 — no build step, no install.
 under `src/` (`cover.js` is the cover engine — layouts, grades, lettering;
 `main.js` wires the editor; `shots.js` sets up deterministic screenshot
 scenes). The Anton and Pacifico fonts are vendored under
-`app/fonts/` under the SIL Open Font License (see `OFL.txt`). The two
-sample photos in `app/samples/` were made for make.fun with an image
-model and are free to use. `main.ts` (Node 22, standard library only)
+`app/fonts/` under the SIL Open Font License (see `OFL.txt`). The three
+sample photos in `app/samples/` are Hendra's portrait, used with his
+permission, plus two made for make.fun with an image model and free to
+use. `main.ts` (Node 22, standard library only)
 copies `app/` and `screenshots/` to the output directory and writes
 `dossier.json` with the vendored make.fun library:
 

@@ -26,7 +26,7 @@ export function loadImage(url) {
 }
 
 function titleH() {
-  return Math.round(canvas.height * 0.21);
+  return Math.round(canvas.height * 0.23);
 }
 
 function redraw() {
@@ -218,6 +218,12 @@ const dropzone = document.getElementById('dropzone');
 }));
 dropzone.addEventListener('drop', (e) => addFiles(e.dataTransfer.files));
 
+document.getElementById('sample-hendra').addEventListener('click', async () => {
+  state.photos.push(await loadImage('samples/hendra.jpg'));
+  state.panels[selected].photo = state.photos.length - 1;
+  refreshThumbs();
+  redraw();
+});
 document.getElementById('sample-boulevard').addEventListener('click', async () => {
   state.photos.push(await loadImage('samples/boulevard.jpg'));
   state.panels[selected].photo = state.photos.length - 1;
@@ -284,6 +290,8 @@ document.getElementById('export-all').addEventListener('click', async () => {
 
 async function boot() {
   try {
+    // Hendra's portrait leads: it is the cover's hero photo by default.
+    state.photos.push(await loadImage('samples/hendra.jpg'));
     state.photos.push(await loadImage('samples/boulevard.jpg'));
     state.photos.push(await loadImage('samples/pier.jpg'));
   } catch {
@@ -294,23 +302,24 @@ async function boot() {
   const query = new URLSearchParams(location.search);
   const shot = query.get('shot');
   if (shot) {
-    await runShot(shot, query, async ({ photo, title, subtitle, layout, grade, sizeW, sizeH }) => {
+    await runShot(shot, query, async ({ title, subtitle, layout, grade, sizeW, sizeH, slots }) => {
       state.layout = layout;
       state.grade = grade;
       state.title = title;
       state.subtitle = subtitle;
-      // The shot photo becomes photo 0 and fills every slot; each slot gets
-      // a different crop of it, so a multi-panel layout reads as a poster
-      // instead of the same frame repeated.
-      const img = await loadImage(`samples/${photo}.jpg`);
-      state.photos = [img];
-      const crops = [
-        { photo: 0, zoom: 1, ox: 0, oy: 0 },
-        { photo: 0, zoom: 1.4, ox: 0, oy: 0.18 },
-        { photo: 0, zoom: 1.3, ox: 0.1, oy: -0.12 },
-        { photo: 0, zoom: 1.8, ox: -0.1, oy: 0 },
-      ];
-      state.panels = state.panels.map((_, i) => crops[i % crops.length]);
+      // Each slot names its own photo, so a cover can mix a hero portrait
+      // with story panels instead of repeating one frame: load every
+      // distinct photo the slots name, in first-use order.
+      const byName = new Map();
+      for (const slot of slots) {
+        if (!byName.has(slot.photo)) byName.set(slot.photo, await loadImage(`samples/${slot.photo}.jpg`));
+      }
+      state.photos = [...byName.values()];
+      const indexOf = (name) => [...byName.keys()].indexOf(name);
+      state.panels = state.panels.map((_, i) => {
+        const slot = slots[i % slots.length];
+        return { photo: indexOf(slot.photo), zoom: slot.zoom, ox: slot.ox, oy: slot.oy };
+      });
       if (shot === 'cover' && sizeW > 0 && sizeH > 0) {
         canvas.width = sizeW;
         canvas.height = sizeH;

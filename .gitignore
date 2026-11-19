@@ -3,3 +3,4 @@ node_modules/
 .DS_Store
 *.log
 coverage/
+# v2: keep local-only scratch out of the entry (editor notes, shot drafts).
