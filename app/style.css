@@ -1,12 +1,156 @@
-html, body { margin: 0; height: 100%; background: #f2f0f4; color: #1d1b22; font: 15px/1.4 system-ui, sans-serif; }
-.app { display: flex; gap: 32px; align-items: center; justify-content: center; height: 100%; padding: 24px; box-sizing: border-box; }
-.controls { display: flex; flex-direction: column; gap: 14px; width: 280px; }
-.controls h1 { margin: 0; font-size: 28px; }
-.controls p { margin: 0; color: #5c5866; }
-label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; }
-input[type=text] { font: inherit; padding: 8px; border: 1px solid #c9c4d1; border-radius: 6px; }
-button { font: inherit; font-weight: 700; padding: 10px; border: 0; border-radius: 6px; background: #1d1b22; color: #fff; cursor: pointer; }
-canvas { width: min(70vh, 60vw); height: min(70vh, 60vw); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); }
-body.shot-cover .controls { display: none; }
-body.shot-cover .app { padding: 0; }
-body.shot-cover canvas { width: 100vw; height: 100vh; box-shadow: none; }
+/* Vice Cover Studio — dark neon editor chrome around a bright poster. */
+@font-face {
+  font-family: 'Anton';
+  src: url('./fonts/Anton-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Pacifico';
+  src: url('./fonts/Pacifico-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: #12081f;
+  color: #f3eefc;
+  font: 15px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+h1, h2 { margin: 0; }
+h1 {
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  font-size: 34px;
+  letter-spacing: 0.5px;
+  background: linear-gradient(90deg, #ffd319, #ff2975 55%, #8c1eff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #c9a6ff;
+  margin-bottom: 8px;
+}
+header p { margin: 8px 0 0; color: #b9aecb; }
+
+.app {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.controls { display: flex; flex-direction: column; gap: 18px; width: 330px; flex-shrink: 0; }
+.group {
+  background: #1d0f31;
+  border: 1px solid #3a2360;
+  border-radius: 12px;
+  padding: 14px;
+}
+.hint { margin: 8px 0 0; font-size: 12.5px; color: #9d8fb5; }
+
+label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 13px; }
+label + label { margin-top: 10px; }
+input[type=text] {
+  font: inherit;
+  padding: 9px 10px;
+  border: 1px solid #4b3375;
+  border-radius: 8px;
+  background: #150a26;
+  color: #fff;
+}
+input[type=range] { width: 100%; accent-color: #ff2975; }
+button {
+  font: inherit;
+  font-weight: 700;
+  padding: 9px 12px;
+  border: 1px solid #4b3375;
+  border-radius: 8px;
+  background: #2a1747;
+  color: #f3eefc;
+  cursor: pointer;
+}
+button:hover { border-color: #8c1eff; }
+button.active { background: #ff2975; border-color: #ff2975; color: #fff; }
+button.primary { background: linear-gradient(90deg, #ff2975, #8c1eff); border: 0; }
+button.ghost { background: transparent; }
+#status { margin: 10px 0 0; min-height: 1.2em; font-size: 13px; color: #7ee8fa; }
+
+.picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.picker button { padding: 8px 10px; font-size: 13px; }
+.swatch {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: -2px;
+  border: 1px solid rgba(255,255,255,0.5);
+}
+
+.dropzone {
+  border: 1.5px dashed #6b4a9e;
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+  color: #b9aecb;
+  font-size: 13px;
+}
+.dropzone.over { border-color: #ff2975; background: rgba(255,41,117,0.08); }
+.file-btn { display: inline-block; background: #2a1747; border: 1px solid #4b3375; border-radius: 8px; padding: 8px 12px; font-weight: 700; color: #f3eefc; cursor: pointer; margin-bottom: 6px; }
+.file-btn input { display: none; }
+.samples { display: flex; gap: 8px; margin-top: 10px; }
+.samples button { flex: 1; font-size: 13px; }
+.thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.thumb { padding: 0; border-radius: 8px; overflow: hidden; width: 64px; height: 64px; }
+.thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.thumb.assigned { outline: 3px solid #ff2975; outline-offset: 1px; }
+
+.export-row { display: flex; gap: 8px; margin-top: 10px; }
+.export-row button { flex: 1; }
+
+.preview { position: sticky; top: 24px; flex: 1; max-width: 720px; text-align: center; }
+.preview canvas {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  box-shadow: 0 12px 44px rgba(0, 0, 0, 0.55);
+  border-radius: 4px;
+  cursor: grab;
+  touch-action: none;
+  background: #160a24;
+}
+.preview canvas:active { cursor: grabbing; }
+.preview .hint { text-align: center; }
+
+@media (max-width: 860px) {
+  .app { flex-direction: column; align-items: stretch; }
+  .controls { width: auto; }
+  .preview { position: static; max-width: none; }
+}
+
+/* Screenshot scenes: the cover alone fills the window, controls hidden. */
+body.shot-cover .controls,
+body.shot-cover .preview .hint { display: none; }
+body.shot-cover .app { padding: 0; max-width: none; }
+body.shot-cover .preview { position: static; max-width: none; flex: none; width: 100vw; height: 100vh; }
+body.shot-cover canvas {
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  aspect-ratio: auto;
+  box-shadow: none;
+  border-radius: 0;
+  object-fit: contain;
+  background: #160a24;
+}
