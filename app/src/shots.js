@@ -17,13 +17,14 @@
 import { GRADES, LAYOUTS } from './cover.js';
 
 // The v1 single-photo crops, kept as the fallback when a shot names no
-// per-slot crop: each slot gets a different crop of the one photo, so a
-// multi-panel layout reads as a poster instead of the same frame repeated.
+// per-slot crop: each slot gets a different face-safe crop of Hendra's
+// portrait, so a multi-panel layout reads as a poster instead of the
+// same frame repeated, and no crop ever cuts his face at the mouth.
 const FALLBACK_CROPS = [
-  { zoom: 1, ox: 0, oy: 0 },
-  { zoom: 1.4, ox: 0, oy: 0.18 },
-  { zoom: 1.3, ox: 0.1, oy: -0.12 },
-  { zoom: 1.8, ox: -0.1, oy: 0 },
+  { zoom: 1.5, ox: 0.21, oy: 0.08 },
+  { zoom: 1.2, ox: 0.05, oy: -0.30 },
+  { zoom: 1.35, ox: -0.08, oy: -0.30 },
+  { zoom: 1.0, ox: 0, oy: -0.18 },
 ];
 
 export async function runShot(shot, query, setup) {
@@ -32,6 +33,7 @@ export async function runShot(shot, query, setup) {
   const subtitle = query.get('subtitle') ?? 'Vice City Nights';
   const layout = LAYOUTS[query.get('layout')] ? query.get('layout') : 'hero';
   const grade = GRADES[query.get('grade')] ? query.get('grade') : 'sunset';
+  const shades = query.get('shades') !== '0';
   const size = (query.get('size') ?? '').split('x');
   const sizeW = Number(size[0]) || 0;
   const sizeH = Number(size[1]) || 0;
@@ -50,7 +52,7 @@ export async function runShot(shot, query, setup) {
   });
 
   if (shot === 'cover') document.body.classList.add('shot-cover');
-  await setup({ photo, title, subtitle, layout, grade, sizeW, sizeH, slots });
+  await setup({ photo, title, subtitle, layout, grade, sizeW, sizeH, slots, shades });
 
   // Wait for the vendored fonts: the title must render in Anton/Pacifico,
   // not in a fallback, before the screenshot is taken.

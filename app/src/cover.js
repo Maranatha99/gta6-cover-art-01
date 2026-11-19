@@ -11,6 +11,9 @@
 // shadows and a sun bloom, bigger title lettering with a hard sticker
 // shadow, a neon strip above the title band, bold panel keylines, and a
 // roundel badge — so the cover still reads at contact-sheet size.
+// v2.1: every panel is Hendra's portrait (one person, one story), each
+// with a face-safe crop, and the editor gains a sunglasses toggle that
+// draws black shades over his measured eye points.
 
 export const GRADES = {
   sunset: {
@@ -82,9 +85,11 @@ export const SIZES = [
 ];
 
 /**
- * A fresh default state: Hendra's portrait leads, the pier and boulevard
- * samples tell the story in the strips. The hero crop is tight on his
- * face and shoulders, so the cover reads as a character poster.
+ * A fresh default state: every panel is Hendra's portrait, each with its
+ * own crop, so the cover is one person, one story — no other faces. The
+ * hero crop is tight on his face and shoulders, so the cover reads as a
+ * character poster. `shades` draws black sunglasses over his eyes (see
+ * HENDRA_EYES below); it is on by default for the Hendra sample.
  */
 export function defaultState() {
   return {
@@ -92,12 +97,13 @@ export function defaultState() {
     grade: 'sunset',
     title: 'HENDRA',
     subtitle: 'Vice City Nights',
+    shades: true,
     photos: [], // HTMLImageElement[], filled by main.js
     panels: [
-      { photo: 0, zoom: 1.5, ox: 0.21, oy: 0.5 },
-      { photo: 2, zoom: 1, ox: 0, oy: -0.1 },
-      { photo: 1, zoom: 1.1, ox: 0, oy: 1.26 },
-      { photo: 0, zoom: 1.6, ox: 0.1, oy: -1.07 },
+      { photo: 0, zoom: 1.5, ox: 0.21, oy: 0.08 },
+      { photo: 0, zoom: 1.2, ox: 0.05, oy: -0.30 },
+      { photo: 0, zoom: 1.35, ox: -0.08, oy: -0.30 },
+      { photo: 0, zoom: 1.0, ox: 0, oy: -0.18 },
     ],
   };
 }
@@ -185,6 +191,125 @@ function drawPhotoInto(ctx, img, rect, zoom, ox, oy) {
   const cx = rect.x + rect.w / 2 + ox * rect.w;
   const cy = rect.y + rect.h / 2 + oy * rect.h;
   ctx.drawImage(img, cx - pw / 2, cy - ph / 2, pw, ph);
+}
+
+// Hendra's eyes in his portrait (app/samples/hendra.jpg, 921x2048),
+// measured on a 20px grid over the eye band: his right eye (352, 1072),
+// his left eye (465, 1048). The sunglasses are drawn from these points,
+// so they sit on the eyes in every panel crop; they are only ever drawn
+// on Hendra's own photo, never on another person's picture.
+const HENDRA_EYES = {
+  left: { x: 352 / 921, y: 1072 / 2048 },
+  right: { x: 465 / 921, y: 1048 / 2048 },
+};
+
+/** A rounded-rectangle path (no roundRect dependency). */
+function rrectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+/**
+ * Black sunglasses over Hendra's eyes, drawn in the panel's own
+ * coordinates (after the photo, before the grade wash, so the grade tints
+ * them like the rest of the poster). Geometry is in units of the distance
+ * between the eyes, so the glasses scale with any panel crop: two dark
+ * gradient lenses with a diagonal highlight, a bridge bar, and short
+ * temple arms toward the ears. Skipped when the eyes would be under 24px
+ * apart — too small to read as glasses.
+ */
+function drawShades(ctx, img, rect, zoom, ox, oy) {
+  const scale = Math.max(rect.w / img.naturalWidth, rect.h / img.naturalHeight) * zoom;
+  const pw = img.naturalWidth * scale;
+  const ph = img.naturalHeight * scale;
+  const at = (f) => ({
+    x: rect.x + rect.w / 2 + ox * rect.w + (f.x - 0.5) * pw,
+    y: rect.y + rect.h / 2 + oy * rect.h + (f.y - 0.5) * ph,
+  });
+  const L = at(HENDRA_EYES.left);
+  const R = at(HENDRA_EYES.right);
+  const dx = R.x - L.x;
+  const dy = R.y - L.y;
+  const D = Math.hypot(dx, dy);
+  if (D < 24) return;
+  const ang = Math.atan2(dy, dx);
+  const mx = (L.x + R.x) / 2;
+  const my = (L.y + R.y) / 2;
+  const lw = D * 0.66; // lens width
+  const lh = D * 0.56; // lens height
+  const lift = D * 0.05; // lenses sit a touch above the eye line
+
+  ctx.save();
+  ctx.translate(mx, my - lift);
+  ctx.rotate(ang);
+
+  const lens = (cx) => {
+    const x0 = cx - lw / 2;
+    const y0 = -lh / 2;
+    const r = lh * 0.32;
+    rrectPath(ctx, x0, y0, lw, lh, r);
+    const g = ctx.createLinearGradient(0, y0, 0, y0 + lh);
+    g.addColorStop(0, '#2b2b38');
+    g.addColorStop(0.45, '#0c0c14');
+    g.addColorStop(1, '#000005');
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.4)';
+    ctx.shadowBlur = D * 0.05;
+    ctx.shadowOffsetY = D * 0.03;
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.restore();
+    // Diagonal shine across the upper lens, clipped to its shape.
+    ctx.save();
+    rrectPath(ctx, x0, y0, lw, lh, r);
+    ctx.clip();
+    ctx.translate(cx, 0);
+    ctx.rotate(-0.5);
+    ctx.fillStyle = 'rgba(255,255,255,0.16)';
+    ctx.fillRect(-lw * 0.28, -lh * 1.2, lw * 0.30, lh * 2.4);
+    ctx.fillStyle = 'rgba(255,255,255,0.07)';
+    ctx.fillRect(lw * 0.08, -lh * 1.2, lw * 0.14, lh * 2.4);
+    ctx.restore();
+    // Dark frame around the lens, with a faint lit top edge.
+    rrectPath(ctx, x0, y0, lw, lh, r);
+    ctx.strokeStyle = '#05050a';
+    ctx.lineWidth = D * 0.045;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x0 + r * 0.5, y0 + ctx.lineWidth * 0.4);
+    ctx.lineTo(x0 + lw - r * 0.5, y0 + ctx.lineWidth * 0.4);
+    ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+    ctx.lineWidth = D * 0.012;
+    ctx.stroke();
+  };
+
+  // Lenses first, then the bridge and temples over their inner edges.
+  lens(-D / 2);
+  lens(D / 2);
+  // Bridge: a bar arched slightly upward between the inner lens tops.
+  ctx.beginPath();
+  ctx.moveTo(-D / 2 + lw * 0.30, -lh * 0.16);
+  ctx.quadraticCurveTo(0, -lh * 0.46, D / 2 - lw * 0.30, -lh * 0.16);
+  ctx.strokeStyle = '#0a0a12';
+  ctx.lineWidth = D * 0.055;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+  // Temples: short arms from the outer lens tops toward the ears.
+  ctx.beginPath();
+  ctx.moveTo(-D / 2 - lw / 2 + D * 0.04, -lh * 0.18);
+  ctx.lineTo(-D / 2 - lw / 2 - D * 0.30, -lh * 0.30);
+  ctx.moveTo(D / 2 + lw / 2 - D * 0.04, -lh * 0.18);
+  ctx.lineTo(D / 2 + lw / 2 + D * 0.30, -lh * 0.30);
+  ctx.strokeStyle = '#0a0a12';
+  ctx.lineWidth = D * 0.05;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+  ctx.restore();
 }
 
 /** One grade overlay pass: a gradient fill under a composite mode. */
@@ -296,6 +421,12 @@ export function drawCover(canvas, state) {
       ctx.font = `600 ${Math.max(12, Math.round(r.w * 0.05))}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText('ADD A PHOTO', r.w / 2, r.h / 2);
+    }
+    // Sunglasses over Hendra's eyes, only on his own photo and only
+    // while the toggle is on; the grade wash below tints them with the
+    // rest of the poster.
+    if (img && state.shades !== false && img._photoName === 'hendra') {
+      drawShades(ctx, img, { x: 0, y: 0, w: r.w, h: r.h }, slot.zoom, slot.ox, slot.oy);
     }
     // Crisp comic-book keyline: a dark edge plus a thin white inner line,
     // so panels separate hard even under a strong grade.

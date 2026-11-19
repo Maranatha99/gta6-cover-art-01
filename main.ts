@@ -1,8 +1,10 @@
 // Vice Cover Studio — a gta6-cover-art-01 entry (Node 22, standard library
 // only). v2: the hero sample is Hendra's portrait (used with his
-// permission), the grades are stronger, and the lettering is bolder —
-// see app/src/cover.js. The app is this directory's app/ folder: plain
-// static files a desktop browser loads offline (app/index.html and its ES
+// permission), the grades are stronger, and the lettering is bolder.
+// v2.1: every panel is Hendra's portrait (one person, one story), each
+// with a face-safe crop, and the editor gains a sunglasses toggle that
+// draws black shades over his measured eye points — see app/src/cover.js.
+// The app is this directory's app/ folder: plain static files a desktop
 // modules, the Anton and Pacifico fonts vendored under the OFL, no library,
 // no network request). The program hands it in: it copies app/ and
 // screenshots/ from beside this file to /output and writes

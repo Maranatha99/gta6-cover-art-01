@@ -48,7 +48,7 @@ function syncPickers() {
   mark('sizes', SIZES.indexOf(exportSize));
 }
 
-/** Keep the panel sliders and the selected-slot highlight in sync. */
+/** Keep the panel sliders, the shades toggle and the selected-slot highlight in sync. */
 function syncControls() {
   const slot = state.panels[selected] ?? { zoom: 1, ox: 0, oy: 0 };
   const zoom = document.getElementById('zoom');
@@ -57,6 +57,8 @@ function syncControls() {
   if (zoom) zoom.value = slot.zoom;
   if (ox) ox.value = slot.ox;
   if (oy) oy.value = slot.oy;
+  const shades = document.getElementById('shades');
+  if (shades) shades.checked = state.shades !== false;
   const label = document.getElementById('panel-label');
   if (label) label.textContent = `Panel ${selected + 1} of ${slotCount(state.layout)}`;
   document.querySelectorAll('#thumbs button').forEach((btn, i) => {
@@ -130,6 +132,14 @@ document.getElementById('title').addEventListener('input', (e) => {
 });
 document.getElementById('subtitle').addEventListener('input', (e) => {
   state.subtitle = e.target.value;
+  redraw();
+});
+
+// Sunglasses toggle: black shades over Hendra's eyes (his measured eye
+// points live in cover.js). It only ever draws on the Hendra sample —
+// other photos carry no eye data, so they stay untouched.
+document.getElementById('shades').addEventListener('change', (e) => {
+  state.shades = e.target.checked;
   redraw();
 });
 
@@ -219,19 +229,25 @@ const dropzone = document.getElementById('dropzone');
 dropzone.addEventListener('drop', (e) => addFiles(e.dataTransfer.files));
 
 document.getElementById('sample-hendra').addEventListener('click', async () => {
-  state.photos.push(await loadImage('samples/hendra.jpg'));
+  const img = await loadImage('samples/hendra.jpg');
+  img._photoName = 'hendra';
+  state.photos.push(img);
   state.panels[selected].photo = state.photos.length - 1;
   refreshThumbs();
   redraw();
 });
 document.getElementById('sample-boulevard').addEventListener('click', async () => {
-  state.photos.push(await loadImage('samples/boulevard.jpg'));
+  const img = await loadImage('samples/boulevard.jpg');
+  img._photoName = 'boulevard';
+  state.photos.push(img);
   state.panels[selected].photo = state.photos.length - 1;
   refreshThumbs();
   redraw();
 });
 document.getElementById('sample-pier').addEventListener('click', async () => {
-  state.photos.push(await loadImage('samples/pier.jpg'));
+  const img = await loadImage('samples/pier.jpg');
+  img._photoName = 'pier';
+  state.photos.push(img);
   state.panels[selected].photo = state.photos.length - 1;
   refreshThumbs();
   redraw();
@@ -291,9 +307,13 @@ document.getElementById('export-all').addEventListener('click', async () => {
 async function boot() {
   try {
     // Hendra's portrait leads: it is the cover's hero photo by default.
-    state.photos.push(await loadImage('samples/hendra.jpg'));
-    state.photos.push(await loadImage('samples/boulevard.jpg'));
-    state.photos.push(await loadImage('samples/pier.jpg'));
+    // Each sample is tagged with its name, so the renderer knows which
+    // photo is Hendra's (the only one that ever gets sunglasses).
+    for (const name of ['hendra', 'boulevard', 'pier']) {
+      const img = await loadImage(`samples/${name}.jpg`);
+      img._photoName = name;
+      state.photos.push(img);
+    }
   } catch {
     status.textContent = 'Sample photos could not be loaded — add your own photo to begin.';
   }
@@ -302,17 +322,22 @@ async function boot() {
   const query = new URLSearchParams(location.search);
   const shot = query.get('shot');
   if (shot) {
-    await runShot(shot, query, async ({ title, subtitle, layout, grade, sizeW, sizeH, slots }) => {
+    await runShot(shot, query, async ({ title, subtitle, layout, grade, sizeW, sizeH, slots, shades }) => {
       state.layout = layout;
       state.grade = grade;
       state.title = title;
       state.subtitle = subtitle;
+      state.shades = shades;
       // Each slot names its own photo, so a cover can mix a hero portrait
       // with story panels instead of repeating one frame: load every
       // distinct photo the slots name, in first-use order.
       const byName = new Map();
       for (const slot of slots) {
-        if (!byName.has(slot.photo)) byName.set(slot.photo, await loadImage(`samples/${slot.photo}.jpg`));
+        if (!byName.has(slot.photo)) {
+          const img = await loadImage(`samples/${slot.photo}.jpg`);
+          img._photoName = slot.photo;
+          byName.set(slot.photo, img);
+        }
       }
       state.photos = [...byName.values()];
       const indexOf = (name) => [...byName.keys()].indexOf(name);
